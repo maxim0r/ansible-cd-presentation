@@ -1,0 +1,7 @@
+.*
+!/.gitignore
+*.retry
+infrastructure/
+Dockerfile
+webapp.go
+webapp

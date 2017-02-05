@@ -1,0 +1,22 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  ["registry", "test1", "prod1"].each_with_index do |name, index|
+    config.vm.define name do |vb|
+      vb.vm.box = "jessie64"
+      vb.vm.network "private_network", ip: "10.200.0.1#{index}"
+      vb.vm.provider "virtualbox" do |box|
+        box.memory = "512"
+      end
+      ssh_pub_key = File.readlines("/mnt/extdrv/work/practice/app/tpl/.ssh/id_rsa.pub").first.strip
+      vb.vm.provision "shell", inline: <<-SHELL
+        echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+        apt-get update
+        apt-get upgrade -y
+      SHELL
+    end
+  end
+
+end

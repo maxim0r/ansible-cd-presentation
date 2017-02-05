@@ -1,0 +1,4 @@
+- include: common.yml
+- include: registry.yml
+#- include: webapp.yml
+#- include: front.yml

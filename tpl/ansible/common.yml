@@ -1,0 +1,39 @@
+- name: Install Docker Registry
+  hosts: all
+  become: yes
+
+  pre_tasks:
+
+    - apt: update_cache=yes cache_valid_time=3600
+
+  roles:
+    - role: angstwad.docker_ubuntu
+
+  tasks:
+
+    - name: add registry host to /etc/hosts file
+      lineinfile:
+        dest: /etc/hosts
+        line: "{{ hostvars[system.docker.registry.host].ansible_default_ipv4.address }} {{ system.docker.registry.domain }}"
+
+    - stat: path={{ inventory_dir }}/files/registry.crt
+      register: registry_cert_file
+
+    - debug: var=registry_cert_file
+
+    - block:
+
+      - name: create local registry cert dir
+        file:
+          path: /etc/docker/certs.d/{{system.docker.registry.domain}}:{{ system.docker.registry.port }}
+          state: directory
+
+      - name: add certificate to local docker trust store
+        copy:
+          src: files/registry.crt
+          dest: /etc/docker/certs.d/{{system.docker.registry.domain}}:{{ system.docker.registry.port }}/ca.crt
+
+      - name: restart docker daemon
+        systemd: name=docker state=restarted
+
+      when: registry_cert_file.stat.exists == True
